@@ -69,7 +69,14 @@ macro_rules! clamp {
 fn main() {
     terminal::open("DUEL17", 80, 30);
     terminal::set(config::Window::empty().resizeable(true));
-
+    terminal::set(vec![config::InputFilter::Group {
+                           group: config::InputFilterGroup::Keyboard,
+                           both: false,
+                       },
+                       config::InputFilter::Group {
+                           group: config::InputFilterGroup::Mouse,
+                           both: false,
+                       }]);
 
 
     let instructions = get_instructions();
