@@ -1,13 +1,16 @@
 extern crate libloading;
 extern crate bear_lib_terminal;
+extern crate common;
+
+use libloading::Library;
 
 use bear_lib_terminal::terminal::{self, config, Event, KeyCode, state};
 use bear_lib_terminal::geometry::{Point, Rect, Size};
 
-use std::fmt;
-
-
-use libloading::Library;
+use common::*;
+use common::Register::*;
+use common::Data::*;
+use common::Instruction::*;
 
 const LIB_PATH: &'static str = "./target/debug/libgame.so";
 
@@ -18,54 +21,6 @@ impl Application {
             let f = self.0.get::<fn() -> &'static str>(b"get_message\0").unwrap();
             f()
         }
-    }
-}
-
-#[derive(Clone, Copy)]
-enum Instruction {
-    NOP,
-    Load(Data, Register),
-}
-use Instruction::*;
-
-impl fmt::Display for Instruction {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Instruction::NOP => write!(f, "{}", "NOP"),
-            Instruction::Load(data, register) => write!(f, "load {}{}", data, register),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Data {
-    State,
-}
-use Data::*;
-
-impl fmt::Display for Data {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-#[allow(dead_code)]
-enum Register {
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H,
-}
-use Register::*;
-
-impl fmt::Display for Register {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
     }
 }
 
@@ -214,14 +169,14 @@ fn draw_instructions(instructions: [Instruction; PLAYFIELD_SIZE], mut scroll_off
 fn get_instructions() -> [Instruction; PLAYFIELD_SIZE] {
     let mut result = [NOP; PLAYFIELD_SIZE];
 
-    result[2] = Load(State, A);
-    result[4] = Load(State, B);
-    result[8] = Load(State, C);
-    result[16] = Load(State, D);
-    // result[32] = Load(State, E);
-    // result[64] = Load(State, F);
-    // result[128] = Load(State, G);
-    // result[254] = Load(State, H);
+    result[2] = Load(Value, A);
+    result[4] = Load(Value, B);
+    result[8] = Load(Value, C);
+    result[16] = Load(Value, D);
+    // result[32] = Load(Value, E);
+    // result[64] = Load(Value, F);
+    // result[128] = Load(Value, G);
+    // result[254] = Load(Value, H);
 
     result
 }
