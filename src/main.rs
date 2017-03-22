@@ -27,17 +27,12 @@ impl Application {
 
         Application { library: library }
     }
-
-    fn clamp_scroll_offset(&self, scroll_offset: i32) -> i32 {
+    fn update_and_render(&mut self, platform: &Platform, game: &mut Game, events: &Vec<Event>) {
         unsafe {
-            let f = self.library.get::<fn(i32, i32) -> i32>(b"clamp_scroll_offset\0").unwrap();
-            f(state::size().height, scroll_offset)
-        }
-    }
-    fn draw(&mut self, platform: &Platform, game: &mut Game) {
-        unsafe {
-            let f = self.library.get::<fn(&Platform, &mut Game)>(b"draw\0").unwrap();
-            f(platform, game)
+            let f = self.library
+                .get::<fn(&Platform, &mut Game, &Vec<Event>)>(b"update_and_render\0")
+                .unwrap();
+            f(platform, game, events)
         }
     }
 }
@@ -58,7 +53,7 @@ fn main() {
 
     let mut app = Application::new();
 
-    let mut game = Game::new(common::get_instructions());
+    let mut game = Game::new(common::get_instructions(), size());
 
     let mut last_modified = std::fs::metadata(LIB_PATH).unwrap().modified().unwrap();
 
@@ -69,35 +64,25 @@ fn main() {
         mouse_position: mouse_position,
     };
 
-    app.draw(&platform, &mut game);
+    let mut events = Vec::new();
+
+    app.update_and_render(&platform, &mut game, &mut events);
 
     terminal::refresh();
 
     loop {
-        if let Some(event) = terminal::read_event() {
-            match event {
-                Event::MouseScroll { delta } => {
-                    game.scroll_offset = game.scroll_offset.saturating_add(delta);
-                }
-                Event::KeyPressed { key: KeyCode::Up, ctrl: _, shift: _ } => {
-                    game.scroll_offset =
-                        app.clamp_scroll_offset(game.scroll_offset.saturating_add(-1));
-                }
-                Event::KeyPressed { key: KeyCode::Down, ctrl: _, shift: _ } => {
-                    game.scroll_offset =
-                        app.clamp_scroll_offset(game.scroll_offset.saturating_add(1));
-                }
-                Event::Close |
-                Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => break,
-                _ => (),
-            }
+        events.clear();
+
+        while let Some(event) = terminal::read_event() {
+            events.push(event);
         }
 
         terminal::clear(None);
 
-        app.draw(&platform, &mut game);
+        app.update_and_render(&platform, &mut game, &mut events);
 
         terminal::refresh();
+
         if let Ok(Ok(modified)) = std::fs::metadata(LIB_PATH).map(|m| m.modified()) {
             if modified > last_modified {
                 drop(app);

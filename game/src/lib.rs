@@ -6,6 +6,35 @@ use common::Data::*;
 use common::Instruction::*;
 
 #[no_mangle]
+pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<Event>) {
+    for event in events {
+
+        match *event {
+            Event::MouseScroll { delta } => {
+                game.scroll_offset = game.scroll_offset.saturating_add(delta);
+            }
+            Event::KeyPressed { key: KeyCode::MouseLeft, ctrl: _, shift: _ } => {
+                game.selected_card = clicked_card(game, (platform.mouse_position)());
+            }
+            Event::KeyPressed { key: KeyCode::MouseRight, ctrl: _, shift: _ } => {
+                game.selected_card = None;
+            }
+            Event::KeyPressed { key: KeyCode::Up, ctrl: _, shift: _ } => {
+                game.scroll_offset = game.scroll_offset.saturating_add(-1);
+            }
+            Event::KeyPressed { key: KeyCode::Down, ctrl: _, shift: _ } => {
+                game.scroll_offset = game.scroll_offset.saturating_add(1);
+            }
+            Event::Close |
+            Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => break,
+            _ => (),
+        }
+    }
+
+    draw(platform, game);
+}
+
+
 pub fn draw(platform: &Platform, game: &Game) {
 
     (platform.print_xy)(32, 0, "load state A\nand A 0b0001\nJZ SLOT1");
@@ -23,7 +52,9 @@ pub fn draw(platform: &Platform, game: &Game) {
     }
 
     if let Some(card) = game.cards.get(selected) {
-        draw_card_at(platform, (platform.mouse_position)(), card);
+        let mouse_pos = (platform.mouse_position)();
+
+        draw_card_at(platform, mouse_pos.add(-CARD_WIDTH / 2, 0), card);
     }
 }
 
@@ -121,4 +152,21 @@ fn draw_instructions(platform: &Platform,
             //don't print anything
         }
     }
+}
+
+pub fn clicked_card(game: &Game, mouse_position: Point) -> Option<usize> {
+    //we iterate thisbackwards because we want the top one (the last drawn)
+    //and the cards are drawn in forwards order,
+
+    for i in (0..game.cards.len()).rev() {
+        let ref card = game.cards[i];
+
+        if card.location.x <= mouse_position.x && card.location.y <= mouse_position.y &&
+           mouse_position.x < card.location.x + CARD_WIDTH &&
+           mouse_position.y < card.location.y + CARD_HEIGHT {
+            return Some(i);
+        }
+    }
+
+    None
 }
