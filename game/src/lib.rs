@@ -19,7 +19,7 @@ pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game
         instructions: instructions,
         scroll_offset: 0,
         cards: cards,
-        selected_card: Some(0),
+        selected_card: None,
     }
 }
 
