@@ -17,37 +17,41 @@ use common::Instruction::*;
 
 const LIB_PATH: &'static str = "./target/debug/libgame.so";
 
-struct Application(Library);
+struct Application {
+    library: Library,
+}
+
 impl Application {
+    fn new() -> Self {
+        let library = Library::new(LIB_PATH).unwrap_or_else(|error| panic!("{}", error));
+
+        Application { library: library }
+    }
+
     fn clamp_scroll_offset(&self, scroll_offset: i32) -> i32 {
         unsafe {
-            let f = self.0.get::<fn(i32) -> i32>(b"clamp_scroll_offset\0").unwrap();
+            let f = self.library.get::<fn(i32) -> i32>(b"clamp_scroll_offset\0").unwrap();
             f(scroll_offset)
         }
     }
-    fn get_instructions(&self) -> [Instruction; common::PLAYFIELD_SIZE] {
+    fn get_instructions(library: &Library) -> [Instruction; common::PLAYFIELD_SIZE] {
         unsafe {
-            let f = self.0
-                .get::<fn() -> [Instruction; common::PLAYFIELD_SIZE]>(b"get_instructions\0")
-                .unwrap();
+            let f =
+                library.get::<fn() -> [Instruction; common::PLAYFIELD_SIZE]>(b"get_instructions\0")
+                    .unwrap();
             f()
         }
     }
-    fn draw(&self,
-            platform: &Platform,
-            instructions: [Instruction; common::PLAYFIELD_SIZE],
-            scroll_offset: i32) {
+    fn draw(&mut self, platform: &Platform, game: &mut Game) {
         unsafe {
-            let f = self.0
-                .get::<fn(&Platform, [Instruction; common::PLAYFIELD_SIZE], i32)>(b"draw\0")
-                .unwrap();
-            f(platform, instructions, scroll_offset)
+            let f = self.library.get::<fn(&Platform, &mut Game)>(b"draw\0").unwrap();
+            f(platform, game)
         }
     }
 }
 
 fn main() {
-    terminal::open("DUEL17", 80, 30);
+    terminal::open("Palimpsest Processor", 80, 30);
     terminal::set(config::Window::empty().resizeable(true));
     terminal::set(vec![config::InputFilter::Group {
                            group: config::InputFilterGroup::Keyboard,
@@ -60,13 +64,11 @@ fn main() {
 
 
 
-    let mut app = Application(Library::new(LIB_PATH).unwrap_or_else(|error| panic!("{}", error)));
+    let mut app = Application::new();
+
+    let mut game = Game::new(common::get_instructions());
 
     let mut last_modified = std::fs::metadata(LIB_PATH).unwrap().modified().unwrap();
-
-    let instructions = app.get_instructions();
-
-    let mut scroll_offset: i32 = 0;
 
     let platform = Platform {
         print_xy: terminal::print_xy,
@@ -74,7 +76,7 @@ fn main() {
         size: size,
     };
 
-    app.draw(&platform, instructions, scroll_offset);
+    app.draw(&platform, &mut game);
 
     terminal::refresh();
 
@@ -83,13 +85,15 @@ fn main() {
         if let Some(event) = terminal::read_event() {
             match event {
                 Event::MouseScroll { delta } => {
-                    scroll_offset = scroll_offset.saturating_add(delta);
+                    game.scroll_offset = game.scroll_offset.saturating_add(delta);
                 }
                 Event::KeyPressed { key: KeyCode::Up, ctrl: _, shift: _ } => {
-                    scroll_offset = app.clamp_scroll_offset(scroll_offset.saturating_add(-1));
+                    game.scroll_offset =
+                        app.clamp_scroll_offset(game.scroll_offset.saturating_add(-1));
                 }
                 Event::KeyPressed { key: KeyCode::Down, ctrl: _, shift: _ } => {
-                    scroll_offset = app.clamp_scroll_offset(scroll_offset.saturating_add(1));
+                    game.scroll_offset =
+                        app.clamp_scroll_offset(game.scroll_offset.saturating_add(1));
                 }
                 Event::Close |
                 Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => break,
@@ -99,15 +103,14 @@ fn main() {
 
         terminal::clear(None);
 
-        app.draw(&platform, instructions, scroll_offset);
+        app.draw(&platform, &mut game);
 
         terminal::refresh();
 
         if let Ok(Ok(modified)) = std::fs::metadata(LIB_PATH).map(|m| m.modified()) {
             if modified > last_modified {
                 drop(app);
-                app =
-                    Application(Library::new(LIB_PATH).unwrap_or_else(|error| panic!("{}", error)));
+                app = Application::new();
                 last_modified = modified;
             }
         }

@@ -11,13 +11,11 @@ pub fn get_message() -> &'static str {
 }
 
 #[no_mangle]
-pub fn draw(platform: &Platform,
-            instructions: [Instruction; common::PLAYFIELD_SIZE],
-            scroll_offset: i32) {
+pub fn draw(platform: &Platform, gmae: Game) {
 
     (platform.print_xy)(32, 0, get_message());
 
-    draw_instructions(platform, instructions, scroll_offset);
+    draw_instructions(platform, gmae.instructions, gmae.scroll_offset);
 
     let size = (platform.size)();
 
@@ -120,20 +118,4 @@ fn draw_instructions(platform: &Platform,
             //don't print anything
         }
     }
-}
-
-#[no_mangle]
-pub fn get_instructions() -> [Instruction; common::PLAYFIELD_SIZE] {
-    let mut result = [NOP; common::PLAYFIELD_SIZE];
-
-    result[2] = Load(Value, A);
-    result[4] = Load(Value, B);
-    result[8] = Load(Value, C);
-    result[16] = Load(Value, D);
-    // result[32] = Load(Value, E);
-    // result[64] = Load(Value, F);
-    // result[128] = Load(Value, G);
-    // result[254] = Load(Value, H);
-
-    result
 }

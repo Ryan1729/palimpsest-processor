@@ -9,6 +9,27 @@ pub struct Platform {
 
 pub const PLAYFIELD_SIZE: usize = 32;
 
+pub struct Game {
+    pub instructions: [Instruction; PLAYFIELD_SIZE],
+    pub scroll_offset : i32,
+    pub cards: Vec<Card>,
+}
+
+impl Game {
+    pub fn new(instructions: [Instruction; PLAYFIELD_SIZE]) -> Self {
+        Game {
+            instructions: instructions,
+            scroll_offset : 0,
+            cards: Vec::new(),
+        }
+    }
+}
+
+pub struct Card {
+    pub location: Point,
+    pub instructions: Vec<Instruction>
+}
+
 #[derive(Clone, Copy)]
 pub enum Instruction {
     NOP,
@@ -205,4 +226,19 @@ impl Rect {
 		let bottom_right = Point::new(bottom_right_x, bottom_right_y);
 		Rect::from_points(top_left, bottom_right)
 	}
+}
+
+pub fn get_instructions() -> [Instruction; PLAYFIELD_SIZE] {
+    let mut result = [NOP; PLAYFIELD_SIZE];
+
+    result[2] = Load(Value, A);
+    result[4] = Load(Value, B);
+    result[8] = Load(Value, C);
+    result[16] = Load(Value, D);
+    // result[32] = Load(Value, E);
+    // result[64] = Load(Value, F);
+    // result[128] = Load(Value, G);
+    // result[254] = Load(Value, H);
+
+    result
 }
