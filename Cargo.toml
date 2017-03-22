@@ -1,5 +1,5 @@
 [package]
-name = "bear_lib_terminal_test"
+name = "palimpsest-processor"
 version = "0.1.0"
 authors = ["Ryan1729 <Ryan1729@gmail.com>"]
 
