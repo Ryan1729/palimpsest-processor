@@ -30,16 +30,8 @@ impl Application {
 
     fn clamp_scroll_offset(&self, scroll_offset: i32) -> i32 {
         unsafe {
-            let f = self.library.get::<fn(i32) -> i32>(b"clamp_scroll_offset\0").unwrap();
-            f(scroll_offset)
-        }
-    }
-    fn get_instructions(library: &Library) -> [Instruction; common::PLAYFIELD_SIZE] {
-        unsafe {
-            let f =
-                library.get::<fn() -> [Instruction; common::PLAYFIELD_SIZE]>(b"get_instructions\0")
-                    .unwrap();
-            f()
+            let f = self.library.get::<fn(i32, i32) -> i32>(b"clamp_scroll_offset\0").unwrap();
+            f(state::size().height, scroll_offset)
         }
     }
     fn draw(&mut self, platform: &Platform, game: &mut Game) {
@@ -81,7 +73,6 @@ fn main() {
     terminal::refresh();
 
     loop {
-
         if let Some(event) = terminal::read_event() {
             match event {
                 Event::MouseScroll { delta } => {
@@ -106,7 +97,6 @@ fn main() {
         app.draw(&platform, &mut game);
 
         terminal::refresh();
-
         if let Ok(Ok(modified)) = std::fs::metadata(LIB_PATH).map(|m| m.modified()) {
             if modified > last_modified {
                 drop(app);

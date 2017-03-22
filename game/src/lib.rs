@@ -6,38 +6,30 @@ use common::Data::*;
 use common::Instruction::*;
 
 #[no_mangle]
-pub fn get_message() -> &'static str {
-    "load state A\nand A 0b0001\nJZ SLOT1"
-}
+pub fn draw(platform: &Platform, game: &Game) {
 
-#[no_mangle]
-pub fn draw(platform: &Platform, gmae: Game) {
+    (platform.print_xy)(32, 0, "load state A\nand A 0b0001\nJZ SLOT1");
 
-    (platform.print_xy)(32, 0, get_message());
+    draw_instructions(platform, game.instructions, game.scroll_offset);
 
-    draw_instructions(platform, gmae.instructions, gmae.scroll_offset);
-
-    let size = (platform.size)();
-
-    draw_card(platform, 12, size.height - 24, vec![NOP, NOP]);
-    draw_card(platform,
-              24,
-              size.height - 12,
-              vec![Load(Value, E), Load(Value, A)]);
-
+    for card in game.cards.iter() {
+        draw_card(platform, card);
+    }
 }
 
 const CARD_WIDTH: i32 = 16;
 const CARD_HEIGHT: i32 = 12;
 
 
-fn draw_card(platform: &Platform, x: i32, y: i32, instructions: Vec<Instruction>) {
+fn draw_card(platform: &Platform, card: &Card) {
+    let x = card.location.x;
+    let y = card.location.y;
 
     draw_rect(platform, x, y, CARD_WIDTH, CARD_HEIGHT);
 
     let mut index = 0;
     for i in (y + 1)..(y + CARD_HEIGHT - 1) {
-        if let Some(instruction) = instructions.get(index) {
+        if let Some(instruction) = card.instructions.get(index) {
             let mut instr_str = format!("{}", instruction);
             instr_str.truncate(CARD_WIDTH as usize - 2);
 
@@ -46,9 +38,6 @@ fn draw_card(platform: &Platform, x: i32, y: i32, instructions: Vec<Instruction>
 
         index += 1;
     }
-
-
-
 }
 
 fn draw_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
