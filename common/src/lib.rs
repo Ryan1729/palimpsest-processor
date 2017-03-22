@@ -5,6 +5,7 @@ pub struct Platform {
     pub print_xy: fn(i32, i32, &str),
     pub clear: fn(Option<Rect>),
     pub size: fn() -> Size,
+    pub mouse_position: fn() -> Point,
 }
 
 pub const PLAYFIELD_SIZE: usize = 32;

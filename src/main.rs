@@ -66,6 +66,7 @@ fn main() {
         print_xy: terminal::print_xy,
         clear: clear,
         size: size,
+        mouse_position: mouse_position,
     };
 
     app.draw(&platform, &mut game);
@@ -127,4 +128,8 @@ fn clear(area: Option<common::Rect>) {
 
 fn size() -> common::Size {
     unsafe { mem::transmute::<Size, common::Size>(state::size()) }
+}
+
+fn mouse_position() -> common::Point {
+    unsafe { mem::transmute::<Point, common::Point>(state::mouse::position()) }
 }

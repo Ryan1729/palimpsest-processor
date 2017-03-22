@@ -12,8 +12,18 @@ pub fn draw(platform: &Platform, game: &Game) {
 
     draw_instructions(platform, game.instructions, game.scroll_offset);
 
-    for card in game.cards.iter() {
-        draw_card(platform, card);
+    let selected = game.selected_card.unwrap_or(std::usize::MAX);
+
+    for i in 0..game.cards.len() {
+        let ref card = game.cards[i];
+
+        if i != selected {
+            draw_card(platform, card);
+        }
+    }
+
+    if let Some(card) = game.cards.get(selected) {
+        draw_card_at(platform, (platform.mouse_position)(), card);
     }
 }
 
@@ -22,8 +32,12 @@ const CARD_HEIGHT: i32 = 12;
 
 
 fn draw_card(platform: &Platform, card: &Card) {
-    let x = card.location.x;
-    let y = card.location.y;
+    draw_card_at(platform, card.location, card);
+}
+
+fn draw_card_at(platform: &Platform, location: Point, card: &Card) {
+    let x = location.x;
+    let y = location.y;
 
     draw_rect(platform, x, y, CARD_WIDTH, CARD_HEIGHT);
 
