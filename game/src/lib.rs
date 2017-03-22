@@ -55,7 +55,23 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
                 game.scroll_offset = game.scroll_offset.saturating_add(delta);
             }
             Event::KeyPressed { key: KeyCode::MouseLeft, ctrl: _, shift: _ } => {
-                game.selected_card = clicked_card(game, (platform.mouse_position)());
+                let mouse_pos = (platform.mouse_position)();
+                if let Some(index) = game.selected_card {
+
+                    if let Some(address) = over_address(game, mouse_pos) {
+                        let instructions = game.cards.remove(index).instructions;
+
+                        let mut current_address = address;
+                        for i in 0..instructions.len() {
+                            game.instructions[current_address] = instructions[i];
+                            current_address += 1;
+                        }
+                    }
+
+                    game.selected_card = None;
+                } else {
+                    game.selected_card = clicked_card(game, mouse_pos);
+                }
             }
             Event::KeyPressed { key: KeyCode::MouseRight, ctrl: _, shift: _ } => {
                 game.selected_card = None;
@@ -82,6 +98,19 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
     false
 }
 
+pub fn over_address(game: &Game, mouse_pos: Point) -> Option<usize> {
+    let card_upper_left = mouse_pos.add(-CARD_MOUSE_X_OFFSET, -CARD_MOUSE_Y_OFFSET);
+
+    //plus 1 to skip the top edge of the card
+    let address = game.scroll_offset + card_upper_left.y + 1;
+
+    if address >= 0 && address < PLAYFIELD_SIZE as i32 {
+        Some(address as usize)
+    } else {
+        None
+    }
+
+}
 
 pub fn draw(platform: &Platform, game: &Game) {
 
@@ -102,12 +131,17 @@ pub fn draw(platform: &Platform, game: &Game) {
     if let Some(card) = game.cards.get(selected) {
         let mouse_pos = (platform.mouse_position)();
 
-        draw_card_at(platform, mouse_pos.add(-CARD_WIDTH / 2, 0), card);
+        draw_card_at(platform,
+                     mouse_pos.add(CARD_MOUSE_X_OFFSET, CARD_MOUSE_Y_OFFSET),
+                     card);
     }
 }
 
 const CARD_WIDTH: i32 = 16;
 const CARD_HEIGHT: i32 = 12;
+
+const CARD_MOUSE_X_OFFSET: i32 = -CARD_WIDTH / 2;
+const CARD_MOUSE_Y_OFFSET: i32 = 0;
 
 
 fn draw_card(platform: &Platform, card: &Card) {
