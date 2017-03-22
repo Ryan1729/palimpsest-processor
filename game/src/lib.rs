@@ -5,8 +5,49 @@ use common::Register::*;
 use common::Data::*;
 use common::Instruction::*;
 
+
 #[no_mangle]
-pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<Event>) {
+pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game {
+    let cards = make_hand(size.height,
+                          vec![vec![NOP, NOP, NOP],
+                               vec![Load(Value, E), Load(Value, A)],
+                               vec![Load(Value, E), NOP],
+                               vec![NOP, Load(Value, A)],
+                               vec![Load(Value, G), Load(Value, D)]]);
+
+    Game {
+        instructions: instructions,
+        scroll_offset: 0,
+        cards: cards,
+        selected_card: Some(0),
+    }
+}
+
+const CARD_OFFSET: i32 = 12;
+const CARD_OFFSET_DELTA: i32 = 12;
+
+fn make_hand(height: i32, instructions_list: Vec<Vec<Instruction>>) -> Vec<Card> {
+    let mut result = Vec::new();
+
+    let mut offset = CARD_OFFSET;
+    for instructions in instructions_list {
+        result.push(Card::new(offset, hand_height(height), instructions));
+
+        offset += CARD_OFFSET_DELTA;
+    }
+
+    result
+}
+
+pub fn hand_height(height: i32) -> i32 {
+    height - HAND_HEIGHT_OFFSET
+}
+
+const HAND_HEIGHT_OFFSET: i32 = 8;
+
+#[no_mangle]
+//returns true if quit requested
+pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<Event>) -> bool {
     for event in events {
 
         match *event {
@@ -25,13 +66,20 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
             Event::KeyPressed { key: KeyCode::Down, ctrl: _, shift: _ } => {
                 game.scroll_offset = game.scroll_offset.saturating_add(1);
             }
+            Event::Resize { width, height } => {
+                for card in game.cards.iter_mut() {
+                    card.location.y = hand_height(height);
+                }
+            }
             Event::Close |
-            Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => break,
+            Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => return true,
             _ => (),
         }
     }
 
     draw(platform, game);
+
+    false
 }
 
 
@@ -157,7 +205,6 @@ fn draw_instructions(platform: &Platform,
 pub fn clicked_card(game: &Game, mouse_position: Point) -> Option<usize> {
     //we iterate thisbackwards because we want the top one (the last drawn)
     //and the cards are drawn in forwards order,
-
     for i in (0..game.cards.len()).rev() {
         let ref card = game.cards[i];
 

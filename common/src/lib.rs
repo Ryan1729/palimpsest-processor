@@ -17,41 +17,13 @@ pub struct Game {
     pub selected_card: Option<usize>,
 }
 
-impl Game {
-    pub fn new(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Self {
-        let cards = vec![Card::new(12, hand_height(size.height), vec![NOP, NOP, NOP]),
-                         Card::new(24,
-                                   hand_height(size.height),
-                                   vec![Load(Value, E), Load(Value, A)]),
-                         Card::new(24, hand_height(size.height), vec![Load(Value, E), NOP]),
-                         Card::new(24, hand_height(size.height), vec![NOP, Load(Value, A)]),
-                         Card::new(24,
-                                   hand_height(size.height),
-                                   vec![Load(Value, G), Load(Value, D)])];
-
-        Game {
-            instructions: instructions,
-            scroll_offset: 0,
-            cards: cards,
-            selected_card: Some(0),
-        }
-    }
-}
-
-pub fn hand_height(height: i32) -> i32 {
-    height - HAND_HEIGHT_OFFSET
-}
-
-const HAND_HEIGHT_OFFSET: i32 = 4;
-
-
 pub struct Card {
     pub location: Point,
     pub instructions: Vec<Instruction>,
 }
 
 impl Card {
-    fn new(x: i32, y: i32, instructions: Vec<Instruction>) -> Self {
+    pub fn new(x: i32, y: i32, instructions: Vec<Instruction>) -> Self {
         Card {
             location: Point::new(x, y),
             instructions: instructions,

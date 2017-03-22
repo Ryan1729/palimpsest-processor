@@ -27,10 +27,20 @@ impl Application {
 
         Application { library: library }
     }
-    fn update_and_render(&mut self, platform: &Platform, game: &mut Game, events: &Vec<Event>) {
+
+    fn new_game(&self, instructions: [Instruction; PLAYFIELD_SIZE], size: common::Size) -> Game {
         unsafe {
             let f = self.library
-                .get::<fn(&Platform, &mut Game, &Vec<Event>)>(b"update_and_render\0")
+                .get::<fn([Instruction; PLAYFIELD_SIZE], common::Size) -> Game>(b"new_game\0")
+                .unwrap();
+            f(instructions, size)
+        }
+    }
+
+    fn update_and_render(&self, platform: &Platform, game: &mut Game, events: &Vec<Event>) -> bool {
+        unsafe {
+            let f = self.library
+                .get::<fn(&Platform, &mut Game, &Vec<Event>) -> bool>(b"update_and_render\0")
                 .unwrap();
             f(platform, game, events)
         }
@@ -53,7 +63,7 @@ fn main() {
 
     let mut app = Application::new();
 
-    let mut game = Game::new(common::get_instructions(), size());
+    let mut game = app.new_game(common::get_instructions(), size());
 
     let mut last_modified = std::fs::metadata(LIB_PATH).unwrap().modified().unwrap();
 
@@ -79,7 +89,10 @@ fn main() {
 
         terminal::clear(None);
 
-        app.update_and_render(&platform, &mut game, &mut events);
+        if app.update_and_render(&platform, &mut game, &mut events) {
+            //quit requested
+            break;
+        }
 
         terminal::refresh();
 
