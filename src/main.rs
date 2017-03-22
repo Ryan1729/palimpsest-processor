@@ -1,4 +1,5 @@
 extern crate libloading;
+extern crate bear_lib_terminal_sys;
 extern crate bear_lib_terminal;
 extern crate common;
 
@@ -82,31 +83,31 @@ fn main() {
     app.draw(&platform, instructions, scroll_offset);
 
     terminal::refresh();
-    for event in terminal::events() {
-        match event {
-            Event::MouseScroll { delta } => {
-                scroll_offset = scroll_offset.saturating_add(delta);
+
+    loop {
+
+        if let Some(event) = terminal::read_event() {
+            match event {
+                Event::MouseScroll { delta } => {
+                    scroll_offset = scroll_offset.saturating_add(delta);
+                }
+                Event::KeyPressed { key: KeyCode::Up, ctrl: _, shift: _ } => {
+                    scroll_offset = app.clamp_scroll_offset(scroll_offset.saturating_add(-1));
+                }
+                Event::KeyPressed { key: KeyCode::Down, ctrl: _, shift: _ } => {
+                    scroll_offset = app.clamp_scroll_offset(scroll_offset.saturating_add(1));
+                }
+                Event::Close |
+                Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => break,
+                _ => (),
             }
-            Event::KeyPressed { key: KeyCode::Up, ctrl: _, shift: _ } => {
-                scroll_offset = app.clamp_scroll_offset(scroll_offset.saturating_add(-1));
-            }
-            Event::KeyPressed { key: KeyCode::Down, ctrl: _, shift: _ } => {
-                scroll_offset = app.clamp_scroll_offset(scroll_offset.saturating_add(1));
-            }
-            Event::Close |
-            Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => break,
-            _ => (),
         }
 
         terminal::clear(None);
 
-        terminal::print_xy(32, 0, app.get_message());
-
         app.draw(&platform, instructions, scroll_offset);
 
         terminal::refresh();
-
-
 
         if let Ok(Ok(modified)) = std::fs::metadata(LIB_PATH).map(|m| m.modified()) {
             if modified > last_modified {
@@ -121,8 +122,20 @@ fn main() {
     terminal::close();
 }
 
-fn clear(rect: Option<common::Rect>) {
-    unsafe { terminal::clear(mem::transmute::<Option<common::Rect>, Option<Rect>>(rect)) };
+fn clear(area: Option<common::Rect>) {
+
+    match area {
+        Some(rect) => {
+            bear_lib_terminal_sys::clear_area(rect.top_left.x,
+                                              rect.top_left.y,
+                                              rect.size.width,
+                                              rect.size.height)
+        }
+        None => bear_lib_terminal_sys::clear(),
+    }
+
+    //switch to this  when/if my pull request is published
+    // unsafe { terminal::clear(mem::transmute::<Option<common::Rect>, Option<Rect>>(area)) };
 }
 
 fn size() -> common::Size {

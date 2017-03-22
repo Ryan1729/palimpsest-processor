@@ -14,17 +14,20 @@ pub fn get_message() -> &'static str {
 pub fn draw(platform: &Platform,
             instructions: [Instruction; common::PLAYFIELD_SIZE],
             scroll_offset: i32) {
+    (platform.print_xy)(32, 0, get_message());
+
+
     draw_instructions(platform, instructions, scroll_offset);
 
     let size = (platform.size)();
 
-    draw_rect(platform, 12, size.height - 24, 12, 8);
+    draw_rect(platform, 12, size.height - 24, 10, 8);
 }
 
 #[no_mangle]
 pub fn draw_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
     (platform.clear)(Some(Rect::from_values(x, y, w, h)));
-    //
+
     let right = x + w;
     let bottom = y + h;
     // top
