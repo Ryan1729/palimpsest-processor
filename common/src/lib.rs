@@ -20,7 +20,7 @@ impl fmt::Display for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Instruction::NOP => write!(f, "{}", "NOP"),
-            Instruction::Load(data, register) => write!(f, "load {}{}", data, register),
+            Instruction::Load(data, register) => write!(f, "load {} {}", data, register),
         }
     }
 }

@@ -19,12 +19,6 @@ const LIB_PATH: &'static str = "./target/debug/libgame.so";
 
 struct Application(Library);
 impl Application {
-    fn get_message(&self) -> &'static str {
-        unsafe {
-            let f = self.0.get::<fn() -> &'static str>(b"get_message\0").unwrap();
-            f()
-        }
-    }
     fn clamp_scroll_offset(&self, scroll_offset: i32) -> i32 {
         unsafe {
             let f = self.0.get::<fn(i32) -> i32>(b"clamp_scroll_offset\0").unwrap();
@@ -134,7 +128,7 @@ fn clear(area: Option<common::Rect>) {
         None => bear_lib_terminal_sys::clear(),
     }
 
-    //switch to this  when/if my pull request is published
+    //switch to this when/if my pull request is published
     // unsafe { terminal::clear(mem::transmute::<Option<common::Rect>, Option<Rect>>(area)) };
 }
 

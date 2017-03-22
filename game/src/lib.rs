@@ -14,18 +14,46 @@ pub fn get_message() -> &'static str {
 pub fn draw(platform: &Platform,
             instructions: [Instruction; common::PLAYFIELD_SIZE],
             scroll_offset: i32) {
-    (platform.print_xy)(32, 0, get_message());
 
+    (platform.print_xy)(32, 0, get_message());
 
     draw_instructions(platform, instructions, scroll_offset);
 
     let size = (platform.size)();
 
-    draw_rect(platform, 12, size.height - 24, 10, 8);
+    draw_card(platform, 12, size.height - 24, vec![NOP, NOP]);
+    draw_card(platform,
+              24,
+              size.height - 12,
+              vec![Load(Value, E), Load(Value, A)]);
+
 }
 
-#[no_mangle]
-pub fn draw_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
+const CARD_WIDTH: i32 = 16;
+const CARD_HEIGHT: i32 = 12;
+
+
+fn draw_card(platform: &Platform, x: i32, y: i32, instructions: Vec<Instruction>) {
+
+    draw_rect(platform, x, y, CARD_WIDTH, CARD_HEIGHT);
+
+    let mut index = 0;
+    for i in (y + 1)..(y + CARD_HEIGHT - 1) {
+        if let Some(instruction) = instructions.get(index) {
+            let mut instr_str = format!("{}", instruction);
+            instr_str.truncate(CARD_WIDTH as usize - 2);
+
+            (platform.print_xy)(x + 1, i, &instr_str);
+        }
+
+        index += 1;
+    }
+
+
+
+}
+
+fn draw_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
     (platform.clear)(Some(Rect::from_values(x, y, w, h)));
 
     let right = x + w;
@@ -72,10 +100,9 @@ pub fn clamp_scroll_offset(height: i32, scroll_offset: i32) -> i32 {
     clamp!(-height + 1, scroll_offset, len - 1)
 }
 
-#[no_mangle]
-pub fn draw_instructions(platform: &Platform,
-                         instructions: [Instruction; common::PLAYFIELD_SIZE],
-                         mut scroll_offset: i32) {
+fn draw_instructions(platform: &Platform,
+                     instructions: [Instruction; common::PLAYFIELD_SIZE],
+                     mut scroll_offset: i32) {
 
     let height = (platform.size)().height;
     scroll_offset = clamp_scroll_offset(height, scroll_offset);
