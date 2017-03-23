@@ -179,9 +179,16 @@ fn do_button(platform: &Platform,
     let mouse_pos = (platform.mouse_position)();
     if inside_rect(mouse_pos, spec.x, spec.y, spec.w, spec.h) {
         context.set_hot(id);
+    } else {
+        context.set_not_hot();
     }
 
-    draw_rect(platform, spec.x, spec.y, spec.w, spec.h);
+    if context.hot == id {
+        draw_double_line_rect(platform, spec.x, spec.y, spec.w, spec.h);
+    } else {
+        draw_rect(platform, spec.x, spec.y, spec.w, spec.h);
+    }
+
 
     let rect_middle = spec.x + (spec.w / 2);
 
@@ -270,29 +277,47 @@ fn draw_card_at(platform: &Platform, location: Point, card: &Card) {
 }
 
 fn draw_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
+    draw_rect_with(platform,
+                   x,
+                   y,
+                   w,
+                   h,
+                   ["┌", "─", "┐", "│", "│", "└", "─", "┘"]);
+}
+
+fn draw_double_line_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
+    draw_rect_with(platform,
+                   x,
+                   y,
+                   w,
+                   h,
+                   ["╔", "═", "╗", "║", "║", "╚", "═", "╝"]);
+}
+
+fn draw_rect_with(platform: &Platform, x: i32, y: i32, w: i32, h: i32, edges: [&str; 8]) {
     (platform.clear)(Some(Rect::from_values(x, y, w, h)));
 
     let right = x + w - 1;
     let bottom = y + h - 1;
     // top
-    (platform.print_xy)(x, y, "┌");
+    (platform.print_xy)(x, y, edges[0]);
     for i in (x + 1)..right {
-        (platform.print_xy)(i, y, "─");
+        (platform.print_xy)(i, y, edges[1]);
     }
-    (platform.print_xy)(right, y, "┐");
+    (platform.print_xy)(right, y, edges[2]);
 
     // sides
     for i in (y + 1)..bottom {
-        (platform.print_xy)(x, i, "│");
-        (platform.print_xy)(right, i, "│");
+        (platform.print_xy)(x, i, edges[3]);
+        (platform.print_xy)(right, i, edges[4]);
     }
 
     //bottom
-    (platform.print_xy)(x, bottom, "└");
+    (platform.print_xy)(x, bottom, edges[5]);
     for i in (x + 1)..right {
-        (platform.print_xy)(i, bottom, "─");
+        (platform.print_xy)(i, bottom, edges[6]);
     }
-    (platform.print_xy)(right, bottom, "┘");
+    (platform.print_xy)(right, bottom, edges[7]);
 }
 
 macro_rules! clamp {
