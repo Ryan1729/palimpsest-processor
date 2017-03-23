@@ -177,14 +177,30 @@ fn do_button(platform: &Platform,
     }
 
     let mouse_pos = (platform.mouse_position)();
-    if inside_rect(mouse_pos, spec.x, spec.y, spec.w, spec.h) {
+    let inside = inside_rect(mouse_pos, spec.x, spec.y, spec.w, spec.h);
+    if inside {
         context.set_hot(id);
     } else {
         context.set_not_hot();
     }
 
-    if context.hot == id {
-        draw_double_line_rect(platform, spec.x, spec.y, spec.w, spec.h);
+    if inside && (platform.key_pressed)(KeyCode::MouseLeft) {
+        draw_rect_with(platform,
+                       spec.x,
+                       spec.y,
+                       spec.w,
+                       spec.h,
+                       ["╔", "═", "╕", "║", "│", "╙", "─", "┘"]);
+    } else if context.hot == id {
+        draw_rect_with(platform,
+                       spec.x,
+                       spec.y,
+                       spec.w,
+                       spec.h,
+                       ["┌", "─", "╖", "│", "║", "╘", "═", "╝"]);
+
+
+
     } else {
         draw_rect(platform, spec.x, spec.y, spec.w, spec.h);
     }

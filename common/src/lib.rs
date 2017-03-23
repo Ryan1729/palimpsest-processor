@@ -7,6 +7,7 @@ pub struct Platform {
     pub size: fn() -> Size,
     pub mouse_position: fn() -> Point,
     pub clicks: fn() -> i32,
+    pub key_pressed: fn(KeyCode) -> bool,
 }
 
 pub const PLAYFIELD_SIZE: usize = 32;

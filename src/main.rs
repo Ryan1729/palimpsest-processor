@@ -72,6 +72,7 @@ fn main() {
         size: size,
         mouse_position: mouse_position,
         clicks: terminal::state::mouse::clicks,
+        key_pressed: key_pressed,
     };
 
     let mut events = Vec::new();
@@ -118,4 +119,7 @@ fn size() -> common::Size {
 
 fn mouse_position() -> common::Point {
     unsafe { mem::transmute::<Point, common::Point>(state::mouse::position()) }
+}
+fn key_pressed(key: common::KeyCode) -> bool {
+    terminal::state::key_pressed(unsafe { mem::transmute::<common::KeyCode, KeyCode>(key) })
 }
