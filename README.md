@@ -1,7 +1,18 @@
-## Installation
+#What is this?
+
+TODO
+
+## Installation for Compilation
 
 This program relies on `libBearLibTerminal.so` so that should be copied into `usr/local/lib` or another folder indicated by this command: `ldconfig -v 2>/dev/null | grep -v ^$'\t'`
 
 then you should run `sudo ldconfig` to complete the installation.
 
-Then the executable shgould run correctly
+Then the executable should run correctly
+
+##TODO List
+-> "Run" button that inverts colours when clicked
+  -> clciked only when mouse is pressed AND released in button bounds
+-> when button is clicked invert each instruction in playfield in turn
+-> actually run instructions.
+  -> simple register display, init to zero

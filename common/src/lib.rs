@@ -50,13 +50,15 @@ impl fmt::Display for Instruction {
 
 #[derive(Debug, Clone, Copy)]
 pub enum Data {
-    Value,
+    Immeadiate(u8),
 }
 use Data::*;
 
 impl fmt::Display for Data {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        match *self {
+            Immeadiate(value) => write!(f, "{:#04X}", value)
+        }
     }
 }
 
@@ -83,14 +85,14 @@ impl fmt::Display for Register {
 pub fn get_instructions() -> [Instruction; PLAYFIELD_SIZE] {
     let mut result = [NOP; PLAYFIELD_SIZE];
 
-    result[2] = Load(Value, A);
-    result[4] = Load(Value, B);
-    result[8] = Load(Value, C);
-    result[16] = Load(Value, D);
-    // result[32] = Load(Value, E);
-    // result[64] = Load(Value, F);
-    // result[128] = Load(Value, G);
-    // result[254] = Load(Value, H);
+    result[2] = Load(Immeadiate(2), A);
+    result[4] = Load(Immeadiate(4), B);
+    result[8] = Load(Immeadiate(8), C);
+    result[16] = Load(Immeadiate(16), D);
+    // result[32] = Load(Immeadiate(32), E);
+    // result[64] = Load(Immeadiate(64), F);
+    // result[128] = Load(Immeadiate(128), G);
+    // result[254] = Load(Immeadiate(254), H);
 
     result
 }

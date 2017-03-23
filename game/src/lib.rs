@@ -10,10 +10,10 @@ use common::Instruction::*;
 pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game {
     let cards = make_hand(size.height,
                           vec![vec![NOP, NOP, NOP],
-                               vec![Load(Value, E), Load(Value, A)],
-                               vec![Load(Value, E), NOP],
-                               vec![NOP, Load(Value, A)],
-                               vec![Load(Value, G), Load(Value, D)]]);
+                               vec![Load(Immeadiate(42), E), Load(Immeadiate(42), A)],
+                               vec![Load(Immeadiate(42), E), NOP],
+                               vec![NOP, Load(Immeadiate(42), A)],
+                               vec![Load(Immeadiate(42), G), Load(Immeadiate(42), D)]]);
 
     Game {
         instructions: instructions,
