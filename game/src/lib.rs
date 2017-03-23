@@ -20,6 +20,7 @@ pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game
         scroll_offset: 0,
         cards: cards,
         selected_card: None,
+        playfield_right_edge: 16,
     }
 }
 
@@ -45,6 +46,14 @@ pub fn hand_height(height: i32) -> i32 {
 
 const HAND_HEIGHT_OFFSET: i32 = 8;
 
+fn collect_hand(cards: &mut Vec<Card>) {
+    let mut offset = CARD_OFFSET;
+    for card in cards.iter_mut() {
+        card.location.x = offset;
+        offset += CARD_OFFSET_DELTA;
+    }
+}
+
 #[no_mangle]
 //returns true if quit requested
 pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<Event>) -> bool {
@@ -66,6 +75,8 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
                             game.instructions[current_address] = instructions[i];
                             current_address += 1;
                         }
+
+                        collect_hand(&mut game.cards);
                     }
 
                     game.selected_card = None;
@@ -81,6 +92,9 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
             }
             Event::KeyPressed { key: KeyCode::Down, ctrl: _, shift: _ } => {
                 game.scroll_offset = game.scroll_offset.saturating_add(1);
+            }
+            Event::KeyPressed { key: KeyCode::R, ctrl: true, shift: _ } => {
+                *game = new_game(common::get_instructions(), (platform.size)());
             }
             Event::Resize { width, height } => {
                 for card in game.cards.iter_mut() {
@@ -99,7 +113,11 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
 }
 
 pub fn over_address(game: &Game, mouse_pos: Point) -> Option<usize> {
-    let card_upper_left = mouse_pos.add(-CARD_MOUSE_X_OFFSET, -CARD_MOUSE_Y_OFFSET);
+    let card_upper_left = mouse_pos.add(CARD_MOUSE_X_OFFSET, CARD_MOUSE_Y_OFFSET);
+
+    if card_upper_left.x > game.playfield_right_edge {
+        return None;
+    }
 
     //plus 1 to skip the top edge of the card
     let address = game.scroll_offset + card_upper_left.y + 1;
@@ -131,9 +149,13 @@ pub fn draw(platform: &Platform, game: &Game) {
     if let Some(card) = game.cards.get(selected) {
         let mouse_pos = (platform.mouse_position)();
 
-        draw_card_at(platform,
-                     mouse_pos.add(CARD_MOUSE_X_OFFSET, CARD_MOUSE_Y_OFFSET),
-                     card);
+        let card_upper_left = mouse_pos.add(CARD_MOUSE_X_OFFSET, CARD_MOUSE_Y_OFFSET);
+
+        draw_card_at(platform, card_upper_left, card);
+
+        if over_address(game, mouse_pos).is_some() {
+            (platform.print_xy)(card_upper_left.x, card_upper_left.y + 1, "<");
+        }
     }
 }
 

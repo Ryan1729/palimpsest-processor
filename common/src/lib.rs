@@ -15,6 +15,7 @@ pub struct Game {
     pub scroll_offset: i32,
     pub cards: Vec<Card>,
     pub selected_card: Option<usize>,
+    pub playfield_right_edge : i32,
 }
 
 pub struct Card {
