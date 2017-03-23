@@ -1,5 +1,4 @@
 extern crate libloading;
-extern crate bear_lib_terminal_sys;
 extern crate bear_lib_terminal;
 extern crate common;
 
@@ -109,19 +108,7 @@ fn main() {
 }
 
 fn clear(area: Option<common::Rect>) {
-
-    match area {
-        Some(rect) => {
-            bear_lib_terminal_sys::clear_area(rect.top_left.x,
-                                              rect.top_left.y,
-                                              rect.size.width,
-                                              rect.size.height)
-        }
-        None => bear_lib_terminal_sys::clear(),
-    }
-
-    //switch to this when/if my pull request is published
-    // unsafe { terminal::clear(mem::transmute::<Option<common::Rect>, Option<Rect>>(area)) };
+    unsafe { terminal::clear(mem::transmute::<Option<common::Rect>, Option<Rect>>(area)) };
 }
 
 fn size() -> common::Size {

@@ -2,8 +2,7 @@
 name = "palimpsest-processor"
 version = "0.1.0"
 dependencies = [
- "bear-lib-terminal 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "bear-lib-terminal-sys 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bear-lib-terminal 1.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "common 0.1.0",
  "game 0.1.0",
  "libloading 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -11,7 +10,7 @@ dependencies = [
 
 [[package]]
 name = "bear-lib-terminal"
-version = "1.3.2"
+version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bear-lib-terminal-sys 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -165,7 +164,7 @@ version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [metadata]
-"checksum bear-lib-terminal 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0eb8791b0ab130464777be602fd30228ce863095f33a18effa3759ba245986f6"
+"checksum bear-lib-terminal 1.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "0382abf57f322c36902f4624421ab01fb0341da814eb7d75af042c14d1a1ce10"
 "checksum bear-lib-terminal-sys 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7ac41f4762ae5c1cf56c20391f35078053dc9fd7faf12a74d63025de506503d2"
 "checksum dtoa 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "80c8b71fd71146990a9742fc06dcbbde19161a267e0ad4e572c35162f4578c90"
 "checksum itoa 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "eb2f404fbc66fd9aac13e998248505e7ecb2ad8e44ab6388684c5fb11c6c251c"
