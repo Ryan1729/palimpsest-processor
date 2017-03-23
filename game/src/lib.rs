@@ -5,7 +5,6 @@ use common::Register::*;
 use common::Data::*;
 use common::Instruction::*;
 
-
 #[no_mangle]
 pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game {
     let cards = make_hand(size.height,
@@ -15,12 +14,26 @@ pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game
                                vec![NOP, Load(Immeadiate(42), A)],
                                vec![Load(Immeadiate(42), G), Load(Immeadiate(42), D)]]);
 
+    let run_button_width = 11;
+    let run_button_spec = ButtonSpec {
+        x: size.width - (run_button_width + 1),
+        y: 4,
+        w: run_button_width,
+        h: 3,
+        text: "Run".to_string(),
+    };
+
     Game {
         instructions: instructions,
         scroll_offset: 0,
         cards: cards,
         selected_card: None,
         playfield_right_edge: 16,
+        ui_context: UIContext {
+            hot: 0,
+            active: 0,
+        },
+        run_button_spec: run_button_spec,
     }
 }
 
@@ -57,6 +70,8 @@ fn collect_hand(cards: &mut Vec<Card>) {
 #[no_mangle]
 //returns true if quit requested
 pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<Event>) -> bool {
+    let mut left_mouse_released = false;
+
     for event in events {
 
         match *event {
@@ -84,6 +99,9 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
                     game.selected_card = clicked_card(game, mouse_pos);
                 }
             }
+            Event::KeyReleased { key: KeyCode::MouseLeft, ctrl: _, shift: _ } => {
+                left_mouse_released = true;
+            }
             Event::KeyPressed { key: KeyCode::MouseRight, ctrl: _, shift: _ } => {
                 game.selected_card = None;
             }
@@ -107,9 +125,71 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         }
     }
 
+    if game.selected_card.is_some() {
+        game.ui_context.hot = CARD_UI_ID;
+        game.ui_context.active = CARD_UI_ID;
+    } else {
+        if game.ui_context.hot == CARD_UI_ID {
+            game.ui_context.set_not_hot();
+            game.ui_context.set_not_active();
+        }
+    }
+
+    if do_button(platform,
+                 &mut game.ui_context,
+                 &game.run_button_spec,
+                 -704788405,
+                 left_mouse_released) {
+        unsafe {
+            println!("a: {}", a);
+            a += 1;
+        }
+
+
+    }
+
     draw(platform, game);
 
     false
+}
+
+const CARD_UI_ID: UiId = 1;
+
+static mut a: i32 = 0;
+
+fn do_button(platform: &Platform,
+             context: &mut UIContext,
+             spec: &ButtonSpec,
+             id: UiId,
+             left_mouse_released: bool)
+             -> bool {
+    let mut result = false;
+
+    if context.active == id {
+        if left_mouse_released {
+            if context.hot == id {
+                result = true;
+            }
+        }
+        context.set_not_active();
+    } else if context.hot == id {
+        context.set_active(id);
+    }
+
+    let mouse_pos = (platform.mouse_position)();
+    if inside_rect(mouse_pos, spec.x, spec.y, spec.w, spec.h) {
+        context.set_hot(id);
+    }
+
+    draw_rect(platform, spec.x, spec.y, spec.w, spec.h);
+
+    let rect_middle = spec.x + (spec.w / 2);
+
+    (platform.print_xy)(rect_middle - (spec.text.len() as i32 / 2),
+                        spec.y + (spec.h / 2),
+                        &spec.text);
+
+    return result;
 }
 
 pub fn over_address(game: &Game, mouse_pos: Point) -> Option<usize> {
@@ -192,8 +272,8 @@ fn draw_card_at(platform: &Platform, location: Point, card: &Card) {
 fn draw_rect(platform: &Platform, x: i32, y: i32, w: i32, h: i32) {
     (platform.clear)(Some(Rect::from_values(x, y, w, h)));
 
-    let right = x + w;
-    let bottom = y + h;
+    let right = x + w - 1;
+    let bottom = y + h - 1;
     // top
     (platform.print_xy)(x, y, "┌");
     for i in (x + 1)..right {
@@ -264,12 +344,19 @@ pub fn clicked_card(game: &Game, mouse_position: Point) -> Option<usize> {
     for i in (0..game.cards.len()).rev() {
         let ref card = game.cards[i];
 
-        if card.location.x <= mouse_position.x && card.location.y <= mouse_position.y &&
-           mouse_position.x < card.location.x + CARD_WIDTH &&
-           mouse_position.y < card.location.y + CARD_HEIGHT {
+        if inside_rect(mouse_position,
+                       card.location.x,
+                       card.location.y,
+                       CARD_WIDTH,
+                       CARD_HEIGHT) {
             return Some(i);
         }
     }
 
     None
+}
+
+pub fn inside_rect(point: Point, x: i32, y: i32, w: i32, h: i32) -> bool {
+    x <= point.x && y <= point.y && point.x < x + w && point.y < y + h
+
 }

@@ -71,6 +71,7 @@ fn main() {
         clear: clear,
         size: size,
         mouse_position: mouse_position,
+        clicks: terminal::state::mouse::clicks,
     };
 
     let mut events = Vec::new();
