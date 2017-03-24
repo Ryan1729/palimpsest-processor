@@ -35,8 +35,12 @@ pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game
             next_hot: 0,
         },
         run_button_spec: run_button_spec,
+        executing_address: None,
+        instruction_countdown: COUNTDOWN_LENGTH,
     }
 }
+const COUNTDOWN_LENGTH: u16 = 60;
+const COUNTDOWN_NOP_LENGTH: u16 = 10;
 
 const CARD_OFFSET: i32 = 12;
 const CARD_OFFSET_DELTA: i32 = 12;
@@ -129,12 +133,21 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         }
     }
 
-    (platform.print_xy)(32,
-                        16,
-                        &format!("hot : {}, active : {}",
-                                 game.ui_context.hot,
-                                 game.ui_context.active));
+    if let Some(address) = game.executing_address {
+        println!("stuff");
+        game.instruction_countdown -= 1;
 
+        if game.instruction_countdown <= 0 {
+            let new_address = address + 1;
+
+            if is_on_playfield(new_address) {
+                set_executing_address(game, new_address);
+            } else {
+                game.executing_address = None;
+            }
+        }
+
+    }
 
     if game.selected_card.is_some() {
         game.ui_context.hot = CARD_UI_ID;
@@ -154,10 +167,7 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
                  -704788405,
                  left_mouse_pressed,
                  left_mouse_released) {
-        unsafe {
-            println!("a: {}", a);
-            a += 1;
-        }
+        set_executing_address(game, 0);
     }
 
     let test_spec = ButtonSpec {
@@ -180,9 +190,31 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         }
     }
 
+    (platform.print_xy)(32, 14, &format!("{:?}", game.executing_address));
+
     draw(platform, game);
 
     false
+}
+
+fn set_executing_address(game: &mut Game, new_address: i32) {
+    if is_on_playfield(new_address) {
+        game.executing_address = Some(new_address);
+
+        let instruction = game.instructions[new_address as usize];
+
+        if instruction == NOP {
+            game.instruction_countdown = COUNTDOWN_NOP_LENGTH;
+        } else {
+            game.instruction_countdown = COUNTDOWN_LENGTH;
+        }
+
+    }
+
+}
+
+fn is_on_playfield(new_address: i32) -> bool {
+    new_address >= 0 && new_address < PLAYFIELD_SIZE as i32
 }
 
 const CARD_UI_ID: UiId = 1;
@@ -267,9 +299,15 @@ pub fn over_address(game: &Game, mouse_pos: Point) -> Option<usize> {
 
 pub fn draw(platform: &Platform, game: &Game) {
 
+    (platform.print_xy)(32,
+                        16,
+                        &format!("hot : {}, active : {}",
+                                 game.ui_context.hot,
+                                 game.ui_context.active));
+
     (platform.print_xy)(32, 0, "load state A\nand A 0b0001\nJZ SLOT1");
 
-    draw_instructions(platform, game.instructions, game.scroll_offset);
+    draw_instructions(platform, game);
 
     let selected = game.selected_card.unwrap_or(std::usize::MAX);
 
@@ -389,18 +427,46 @@ pub fn clamp_scroll_offset(height: i32, scroll_offset: i32) -> i32 {
     clamp!(-height + 1, scroll_offset, len - 1)
 }
 
-fn draw_instructions(platform: &Platform,
-                     instructions: [Instruction; common::PLAYFIELD_SIZE],
-                     mut scroll_offset: i32) {
+const ALT_FG: Color = Color {
+    red: 0,
+    green: 0,
+    blue: 0,
+    alpha: 255,
+};
+const ALT_BG: Color = Color {
+    red: 255,
+    green: 255,
+    blue: 255,
+    alpha: 255,
+};
+const STANDARD_FG: Color = Color {
+    red: 255,
+    green: 255,
+    blue: 255,
+    alpha: 255,
+};
+const STANDARD_BG: Color = Color {
+    red: 0,
+    green: 0,
+    blue: 0,
+    alpha: 255,
+};
+
+fn draw_instructions(platform: &Platform, game: &Game) {
 
     let height = (platform.size)().height;
-    scroll_offset = clamp_scroll_offset(height, scroll_offset);
+    let scroll_offset = clamp_scroll_offset(height, game.scroll_offset);
 
     for y in 0..height {
         let address = y + scroll_offset;
-        if let Some(instruction) = instructions.get(address as usize) {
-            (platform.print_xy)(0, y, format!("{:#04X}│{}", address, instruction).as_ref());
-
+        if let Some(instruction) = game.instructions.get(address as usize) {
+            if Some(address) == game.executing_address {
+                (platform.set_colors)(ALT_FG, ALT_BG);
+                (platform.print_xy)(0, y, format!("{:#04X}│{}", address, instruction).as_ref());
+                (platform.set_colors)(STANDARD_FG, STANDARD_BG);
+            } else {
+                (platform.print_xy)(0, y, format!("{:#04X}│{}", address, instruction).as_ref());
+            }
         } else if address == -1 {
             (platform.print_xy)(0, y, "────┐");
         } else if address == common::PLAYFIELD_SIZE as i32 {

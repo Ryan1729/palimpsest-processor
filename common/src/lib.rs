@@ -8,6 +8,7 @@ pub struct Platform {
     pub mouse_position: fn() -> Point,
     pub clicks: fn() -> i32,
     pub key_pressed: fn(KeyCode) -> bool,
+    pub set_colors: fn(Color, Color),
 }
 
 pub const PLAYFIELD_SIZE: usize = 32;
@@ -20,6 +21,8 @@ pub struct Game {
     pub playfield_right_edge: i32,
     pub ui_context: UIContext,
     pub run_button_spec: ButtonSpec,
+    pub executing_address: Option<i32>,
+    pub instruction_countdown: u16,
 }
 
 pub struct UIContext {
@@ -73,7 +76,7 @@ impl Card {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Instruction {
     NOP,
     Load(Data, Register),
@@ -89,7 +92,7 @@ impl fmt::Display for Instruction {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Data {
     Immeadiate(u8),
 }
@@ -103,7 +106,7 @@ impl fmt::Display for Data {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[allow(dead_code)]
 pub enum Register {
     A,
@@ -512,4 +515,11 @@ pub enum Event {
     ControlPressed,
     /// The Control key released.
     ControlReleased,
+}
+
+pub struct Color {
+    pub red: u8,
+    pub green: u8,
+    pub blue: u8,
+    pub alpha: u8,
 }

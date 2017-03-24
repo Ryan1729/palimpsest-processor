@@ -5,6 +5,7 @@ extern crate common;
 use libloading::Library;
 
 use bear_lib_terminal::terminal::{self, config, Event, KeyCode, state};
+use bear_lib_terminal::Color;
 use bear_lib_terminal::geometry::{Point, Rect, Size};
 
 use std::mem;
@@ -73,6 +74,7 @@ fn main() {
         mouse_position: mouse_position,
         clicks: terminal::state::mouse::clicks,
         key_pressed: key_pressed,
+        set_colors: set_colors,
     };
 
     let mut events = Vec::new();
@@ -120,6 +122,13 @@ fn size() -> common::Size {
 fn mouse_position() -> common::Point {
     unsafe { mem::transmute::<Point, common::Point>(state::mouse::position()) }
 }
+
 fn key_pressed(key: common::KeyCode) -> bool {
     terminal::state::key_pressed(unsafe { mem::transmute::<common::KeyCode, KeyCode>(key) })
+}
+
+fn set_colors(fg: common::Color, bg: common::Color) {
+    terminal::set_colors(unsafe { mem::transmute::<common::Color, Color>(fg) },
+                         unsafe { mem::transmute::<common::Color, Color>(bg) });
+
 }
