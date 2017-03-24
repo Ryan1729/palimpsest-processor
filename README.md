@@ -12,7 +12,6 @@ Then the executable should run correctly
 
 ##TODO List
 -> "Run" button that inverts colours when clicked
-  -> clciked only when mouse is pressed AND released in button bounds
 -> when button is clicked invert each instruction in playfield in turn
 -> actually run instructions.
   -> simple register display, init to zero

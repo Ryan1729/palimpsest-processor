@@ -129,7 +129,6 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         }
     }
 
-
     (platform.print_xy)(32,
                         16,
                         &format!("hot : {}, active : {}",
@@ -202,11 +201,13 @@ fn do_button(platform: &Platform,
              -> bool {
     let mut result = false;
 
+    let mouse_pos = (platform.mouse_position)();
+    let inside = inside_rect(mouse_pos, spec.x, spec.y, spec.w, spec.h);
+
     if context.active == id {
         if left_mouse_released {
-            if context.hot == id {
-                result = true;
-            }
+            result = context.hot == id && inside;
+
             context.set_not_active();
         }
     } else if context.hot == id {
@@ -215,8 +216,6 @@ fn do_button(platform: &Platform,
         }
     }
 
-    let mouse_pos = (platform.mouse_position)();
-    let inside = inside_rect(mouse_pos, spec.x, spec.y, spec.w, spec.h);
     if inside {
         context.set_next_hot(id);
     }
