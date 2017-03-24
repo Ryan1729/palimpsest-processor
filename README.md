@@ -11,6 +11,19 @@ then you should run `sudo ldconfig` to complete the installation.
 Then the executable should run correctly
 
 ##TODO List
--> actually run instructions.
-  -> simple register display, init to zero
+-> more instructions
+  -> add immediate
+  -> sub immediate
+-> break execution button
+-> pause execution button
+-> more instructions
+  -> display Instruction Register
+    -> let's make it a separate thing for now, we can make it a normal
+       register later if we want.
+  -> jumps
+    -> Jump to immediate if Register is 0
+      -> naming: JAZ -> Jump if A is Zero?
+    -> Jump to immediate if Register is not 0
+    -> Jump to Register 1 if Register 2 is 0
+    -> Jump to Register 1 if Register 2 is not 0
 -> Copy playfield to clipboard button
