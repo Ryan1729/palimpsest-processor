@@ -23,7 +23,38 @@ pub struct Game {
     pub run_button_spec: ButtonSpec,
     pub executing_address: Option<i32>,
     pub instruction_countdown: u16,
+    pub registers: [u8; REGISTER_AMOUNT],
 }
+
+pub const REGISTER_AMOUNT: usize = 8;
+
+pub fn to_register(n: i32) -> Option<Register> {
+    match n {
+        0 => Some(A),
+        1 => Some(B),
+        2 => Some(C),
+        3 => Some(D),
+        4 => Some(E),
+        5 => Some(F),
+        6 => Some(G),
+        7 => Some(H),
+        _ => None,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[allow(dead_code)]
+pub enum Register {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+}
+use Register::*;
 
 pub struct UIContext {
     pub hot: UiId,
@@ -106,19 +137,7 @@ impl fmt::Display for Data {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[allow(dead_code)]
-pub enum Register {
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H,
-}
-use Register::*;
+
 
 impl fmt::Display for Register {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

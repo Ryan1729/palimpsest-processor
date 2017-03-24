@@ -37,6 +37,7 @@ pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game
         run_button_spec: run_button_spec,
         executing_address: None,
         instruction_countdown: COUNTDOWN_LENGTH,
+        registers: [0; REGISTER_AMOUNT],
     }
 }
 const COUNTDOWN_LENGTH: u16 = 60;
@@ -134,11 +135,10 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
     }
 
     if let Some(address) = game.executing_address {
-        println!("stuff");
         game.instruction_countdown -= 1;
 
         if game.instruction_countdown <= 0 {
-            let new_address = address + 1;
+            let new_address = execute(game, address);
 
             if is_on_playfield(new_address) {
                 set_executing_address(game, new_address);
@@ -197,11 +197,33 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
     false
 }
 
+
+fn execute(game: &mut Game, address: i32) -> i32 {
+    let instruction = get_instruction(game, address);
+
+    match instruction {
+        Load(data, register) => {
+            let value = match data {
+                Immeadiate(v) => v,
+            };
+
+            set_register(game, value, register);
+        }
+        NOP => {}
+    }
+
+    address + 1
+}
+
+fn set_register(game: &mut Game, value: u8, register: Register) {
+    game.registers[register as usize] = value;
+}
+
 fn set_executing_address(game: &mut Game, new_address: i32) {
     if is_on_playfield(new_address) {
         game.executing_address = Some(new_address);
 
-        let instruction = game.instructions[new_address as usize];
+        let instruction = get_instruction(game, new_address);
 
         if instruction == NOP {
             game.instruction_countdown = COUNTDOWN_NOP_LENGTH;
@@ -211,6 +233,11 @@ fn set_executing_address(game: &mut Game, new_address: i32) {
 
     }
 
+}
+
+
+fn get_instruction(game: &Game, address: i32) -> Instruction {
+    game.instructions[address as usize]
 }
 
 fn is_on_playfield(new_address: i32) -> bool {
@@ -330,6 +357,8 @@ pub fn draw(platform: &Platform, game: &Game) {
             (platform.print_xy)(card_upper_left.x, card_upper_left.y + 1, "<");
         }
     }
+
+    draw_registers(platform, game);
 }
 
 const CARD_WIDTH: i32 = 16;
@@ -451,6 +480,33 @@ const STANDARD_BG: Color = Color {
     blue: 0,
     alpha: 255,
 };
+
+const REGISTERS_PER_ROW: i32 = 4;
+const REGISTER_DISPLAY_WIDTH: i32 = 8;
+const REGISTER_DISPLAY_HEIGHT: i32 = 1;
+const REGISTERS_X_OFFSET: i32 = REGISTER_DISPLAY_WIDTH * REGISTERS_PER_ROW;
+const REGISTERS_Y_OFFSET: i32 = 0;
+
+fn draw_registers(platform: &Platform, game: &Game) {
+    let width = (platform.size)().width - REGISTERS_X_OFFSET;
+
+    for y in 0..((REGISTER_AMOUNT as i32) / REGISTERS_PER_ROW) {
+        for x in 0..REGISTERS_PER_ROW {
+            let register_number = (y * REGISTERS_PER_ROW + x);
+
+            if let Some(register) = common::to_register(register_number) {
+
+
+                (platform.print_xy)((x * REGISTER_DISPLAY_WIDTH) + width,
+
+                                    (y * REGISTER_DISPLAY_HEIGHT) + REGISTERS_Y_OFFSET,
+                                    &format!("{:?}:{:#04X}",
+                                             register,
+                                             game.registers[register_number as usize]));
+            }
+        }
+    }
+}
 
 fn draw_instructions(platform: &Platform, game: &Game) {
 
