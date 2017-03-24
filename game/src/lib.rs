@@ -32,6 +32,7 @@ pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game
         ui_context: UIContext {
             hot: 0,
             active: 0,
+            next_hot: 0,
         },
         run_button_spec: run_button_spec,
     }
@@ -70,6 +71,7 @@ fn collect_hand(cards: &mut Vec<Card>) {
 #[no_mangle]
 //returns true if quit requested
 pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<Event>) -> bool {
+    let mut left_mouse_pressed = false;
     let mut left_mouse_released = false;
 
     for event in events {
@@ -79,6 +81,8 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
                 game.scroll_offset = game.scroll_offset.saturating_add(delta);
             }
             Event::KeyPressed { key: KeyCode::MouseLeft, ctrl: _, shift: _ } => {
+                left_mouse_pressed = true;
+
                 let mouse_pos = (platform.mouse_position)();
                 if let Some(index) = game.selected_card {
 
@@ -125,6 +129,14 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         }
     }
 
+
+    (platform.print_xy)(32,
+                        16,
+                        &format!("hot : {}, active : {}",
+                                 game.ui_context.hot,
+                                 game.ui_context.active));
+
+
     if game.selected_card.is_some() {
         game.ui_context.hot = CARD_UI_ID;
         game.ui_context.active = CARD_UI_ID;
@@ -135,10 +147,33 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         }
     }
 
+    game.ui_context.frame_init();
+
     if do_button(platform,
                  &mut game.ui_context,
                  &game.run_button_spec,
                  -704788405,
+                 left_mouse_pressed,
+                 left_mouse_released) {
+        unsafe {
+            println!("a: {}", a);
+            a += 1;
+        }
+    }
+
+    let test_spec = ButtonSpec {
+        x: game.run_button_spec.x,
+        y: 8,
+        w: game.run_button_spec.w,
+        h: 3,
+        text: "Test".to_string(),
+    };
+
+    if do_button(platform,
+                 &mut game.ui_context,
+                 &test_spec,
+                 -804788405,
+                 left_mouse_pressed,
                  left_mouse_released) {
         unsafe {
             println!("a: {}", a);
@@ -162,6 +197,7 @@ fn do_button(platform: &Platform,
              context: &mut UIContext,
              spec: &ButtonSpec,
              id: UiId,
+             left_mouse_pressed: bool,
              left_mouse_released: bool)
              -> bool {
     let mut result = false;
@@ -171,21 +207,21 @@ fn do_button(platform: &Platform,
             if context.hot == id {
                 result = true;
             }
+            context.set_not_active();
         }
-        context.set_not_active();
     } else if context.hot == id {
-        context.set_active(id);
+        if left_mouse_pressed {
+            context.set_active(id);
+        }
     }
 
     let mouse_pos = (platform.mouse_position)();
     let inside = inside_rect(mouse_pos, spec.x, spec.y, spec.w, spec.h);
     if inside {
-        context.set_hot(id);
-    } else {
-        context.set_not_hot();
+        context.set_next_hot(id);
     }
 
-    if inside && (platform.key_pressed)(KeyCode::MouseLeft) {
+    if context.active == id && (platform.key_pressed)(KeyCode::MouseLeft) {
         draw_rect_with(platform,
                        spec.x,
                        spec.y,
@@ -199,13 +235,9 @@ fn do_button(platform: &Platform,
                        spec.w,
                        spec.h,
                        ["┌", "─", "╖", "│", "║", "╘", "═", "╝"]);
-
-
-
     } else {
         draw_rect(platform, spec.x, spec.y, spec.w, spec.h);
     }
-
 
     let rect_middle = spec.x + (spec.w / 2);
 

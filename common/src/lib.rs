@@ -24,7 +24,8 @@ pub struct Game {
 
 pub struct UIContext {
     pub hot: UiId,
-    pub active: UiId,
+    pub active: UiId, // pub interacting_with: UiId,
+    pub next_hot: UiId,
 }
 
 impl UIContext {
@@ -34,13 +35,17 @@ impl UIContext {
     pub fn set_active(&mut self, id: UiId) {
         self.active = id;
     }
+    pub fn set_next_hot(&mut self, id: UiId) {
+        self.next_hot = id;
+    }
     pub fn set_not_hot(&mut self) {
         self.hot = 0;
     }
-    pub fn set_hot(&mut self, id: UiId) {
-        if self.hot == 0 {
-            self.hot = id;
+    pub fn frame_init(&mut self) {
+        if self.active == 0 {
+            self.hot = self.next_hot;
         }
+        self.next_hot = 0;
     }
 }
 
