@@ -144,8 +144,6 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
             println!("a: {}", a);
             a += 1;
         }
-
-
     }
 
     draw(platform, game);
@@ -157,6 +155,9 @@ const CARD_UI_ID: UiId = 1;
 
 static mut a: i32 = 0;
 
+//calling this once will swallow multiple clicks on the button. We could either
+//pass in and return the number of clicks to fix that, or this could simply be
+//called multiple times per frame (once for each click).
 fn do_button(platform: &Platform,
              context: &mut UIContext,
              spec: &ButtonSpec,
