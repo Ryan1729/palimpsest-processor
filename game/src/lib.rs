@@ -1,4 +1,7 @@
 extern crate common;
+extern crate rand;
+
+use rand::{Rng, SeedableRng, StdRng};
 
 use common::*;
 use common::Register::*;
@@ -7,12 +10,11 @@ use common::Instruction::*;
 
 #[no_mangle]
 pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game {
-    let cards = make_hand(size.height,
-                          vec![vec![NOP, NOP, NOP],
-                               vec![Load(Immeadiate(42), E), Load(Immeadiate(42), A)],
-                               vec![Load(Immeadiate(42), E), NOP],
-                               vec![NOP, Load(Immeadiate(42), A)],
-                               vec![Load(Immeadiate(42), G), Load(Immeadiate(42), D)]]);
+
+    let seed: &[_] = &[42];
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
+
+    let cards = get_cards(&mut rng, size.height);
 
     let run_button_width = 11;
     let run_button_spec = ButtonSpec {
@@ -38,8 +40,31 @@ pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game
         executing_address: None,
         instruction_countdown: COUNTDOWN_LENGTH,
         registers: [0; REGISTER_AMOUNT],
+        rng: rng,
     }
 }
+
+
+fn get_cards(rng: &mut StdRng, height: i32) -> Vec<Card> {
+
+    let mut instructions_vector = vec![];
+
+    for _ in 0..5 {
+        let instruction_count = rng.gen_range::<u8>(1, 4);
+
+        let mut instructions = vec![];
+
+        for i in 0..instruction_count {
+            instructions.push(rng.gen::<Instruction>())
+        }
+
+
+        instructions_vector.push(instructions);
+    }
+
+    make_hand(height, instructions_vector)
+}
+
 const COUNTDOWN_LENGTH: u16 = 60;
 const COUNTDOWN_NOP_LENGTH: u16 = 10;
 
@@ -132,6 +157,11 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
             Event::KeyPressed { key: KeyCode::Escape, ctrl: _, shift: _ } => return true,
             _ => (),
         }
+    }
+
+    if game.cards.len() <= 0 {
+        let height = (platform.size)().height;
+        game.cards = get_cards(&mut game.rng, height);
     }
 
     if let Some(address) = game.executing_address {

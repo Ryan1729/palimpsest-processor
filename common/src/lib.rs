@@ -1,5 +1,7 @@
-use std::fmt;
+extern crate rand;
 
+use std::fmt;
+use rand::{Rand, Rng, SeedableRng, StdRng};
 
 pub struct Platform {
     pub print_xy: fn(i32, i32, &str),
@@ -24,6 +26,7 @@ pub struct Game {
     pub executing_address: Option<i32>,
     pub instruction_countdown: u16,
     pub registers: [u8; REGISTER_AMOUNT],
+    pub rng: StdRng,
 }
 
 pub const REGISTER_AMOUNT: usize = 8;
@@ -55,6 +58,29 @@ pub enum Register {
     H,
 }
 use Register::*;
+
+impl fmt::Display for Register {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+pub const REGISTER_VARIATION_COUNT: u8 = 4;
+
+impl Rand for Register {
+    fn rand<R: Rng>(rng: &mut R) -> Self {
+        match rng.gen_range(0, REGISTER_VARIATION_COUNT) {
+            0 => A,
+            1 => B,
+            2 => C,
+            3 => D,
+            4 => E,
+            5 => F,
+            6 => G,
+            _ => H,
+        }
+    }
+}
 
 pub struct UIContext {
     pub hot: UiId,
@@ -127,6 +153,19 @@ impl fmt::Display for Instruction {
     }
 }
 
+pub const INSTRUCTION_VARIATION_COUNT: u8 = 4;
+
+impl Rand for Instruction {
+    fn rand<R: Rng>(rng: &mut R) -> Self {
+        match rng.gen_range(0, INSTRUCTION_VARIATION_COUNT) {
+            1 => Load(rng.gen::<Data>(), rng.gen::<Register>()),
+            2 => Add(rng.gen::<Data>(), rng.gen::<Register>()),
+            3 => Sub(rng.gen::<Data>(), rng.gen::<Register>()),
+            _ => NOP,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Data {
     Immeadiate(u8),
@@ -141,13 +180,17 @@ impl fmt::Display for Data {
     }
 }
 
+pub const DATA_VARIATION_COUNT: u8 = 1;
 
+impl Rand for Data {
+    fn rand<R: Rng>(rng: &mut R) -> Self {
+        match rng.gen_range(0, DATA_VARIATION_COUNT) {
+            _ => Immeadiate(rng.gen::<u8>()),
 
-impl fmt::Display for Register {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        }
     }
 }
+
 
 pub fn get_instructions() -> [Instruction; PLAYFIELD_SIZE] {
     let mut result = [NOP; PLAYFIELD_SIZE];
