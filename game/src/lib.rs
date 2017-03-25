@@ -37,6 +37,7 @@ pub fn new_game(instructions: [Instruction; PLAYFIELD_SIZE], size: Size) -> Game
             next_hot: 0,
         },
         run_button_spec: run_button_spec,
+        paused: false,
         executing_address: None,
         instruction_countdown: COUNTDOWN_LENGTH,
         registers: [0; REGISTER_AMOUNT],
@@ -164,19 +165,21 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         game.cards = get_cards(&mut game.rng, height);
     }
 
-    if let Some(address) = game.executing_address {
-        game.instruction_countdown -= 1;
+    if !game.paused {
+        if let Some(address) = game.executing_address {
+            game.instruction_countdown -= 1;
 
-        if game.instruction_countdown <= 0 {
-            let new_address = execute(game, address);
+            if game.instruction_countdown <= 0 {
+                let new_address = execute(game, address);
 
-            if is_on_playfield(new_address) {
-                set_executing_address(game, new_address);
-            } else {
-                game.executing_address = None;
+                if is_on_playfield(new_address) {
+                    set_executing_address(game, new_address);
+                } else {
+                    game.executing_address = None;
+                }
             }
-        }
 
+        }
     }
 
     if game.selected_card.is_some() {
@@ -200,9 +203,30 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         set_executing_address(game, 0);
     }
 
-    let test_spec = ButtonSpec {
+    let pause_spec = ButtonSpec {
         x: game.run_button_spec.x,
         y: 8,
+        w: game.run_button_spec.w,
+        h: 3,
+        text: if game.paused {
+            "Resume".to_string()
+        } else {
+            "Pause".to_string()
+        },
+    };
+
+    if do_button(platform,
+                 &mut game.ui_context,
+                 &pause_spec,
+                 -804788405,
+                 left_mouse_pressed,
+                 left_mouse_released) {
+        game.paused = !game.paused;
+    }
+
+    let break_spec = ButtonSpec {
+        x: game.run_button_spec.x,
+        y: 12,
         w: game.run_button_spec.w,
         h: 3,
         text: "Break".to_string(),
@@ -210,13 +234,16 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
 
     if do_button(platform,
                  &mut game.ui_context,
-                 &test_spec,
-                 -804788405,
+                 &break_spec,
+                 -904788405,
                  left_mouse_pressed,
                  left_mouse_released) {
         game.executing_address = None;
         game.instruction_countdown = COUNTDOWN_LENGTH;
+
+        game.paused = false;
     }
+
 
     (platform.print_xy)(32, 14, &format!("{:?}", game.executing_address));
 

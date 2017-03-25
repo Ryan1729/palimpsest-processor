@@ -23,6 +23,7 @@ pub struct Game {
     pub playfield_right_edge: i32,
     pub ui_context: UIContext,
     pub run_button_spec: ButtonSpec,
+    pub paused: bool,
     pub executing_address: Option<i32>,
     pub instruction_countdown: u16,
     pub registers: [u8; REGISTER_AMOUNT],

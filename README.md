@@ -11,8 +11,6 @@ then you should run `sudo ldconfig` to complete the installation.
 Then the executable should run correctly
 
 ##TODO List
--> break execution button
--> pause execution button
 -> more instructions
   -> display Instruction Register
     -> let's make it a separate thing for now, we can make it a normal
