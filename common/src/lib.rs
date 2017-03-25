@@ -140,6 +140,10 @@ pub enum Instruction {
     Load(Data, Register),
     Add(Data, Register),
     Sub(Data, Register),
+    JumpZero(Data, Register),
+    JumpNotZero(Data, Register),
+    JumpRZero(Register, Register),
+    JumpRNotZero(Register, Register),
 }
 use Instruction::*;
 
@@ -150,11 +154,19 @@ impl fmt::Display for Instruction {
             Instruction::Load(data, register) => write!(f, "load {} {}", data, register),
             Instruction::Add(data, register) => write!(f, "add  {} {}", data, register),
             Instruction::Sub(data, register) => write!(f, "sub  {} {}", data, register),
+            Instruction::JumpZero(data, register) => write!(f, "JZ  {} {}", data, register),
+            Instruction::JumpNotZero(data, register) => write!(f, "JNZ  {} {}", data, register),
+            Instruction::JumpRZero(register1, register2) => {
+                write!(f, "JRZ {} {}", register1, register2)
+            }
+            Instruction::JumpRNotZero(register1, register2) => {
+                write!(f, "JRNZ {} {}", register1, register2)
+            }
         }
     }
 }
 
-pub const INSTRUCTION_VARIATION_COUNT: u8 = 4;
+pub const INSTRUCTION_VARIATION_COUNT: u8 = 8;
 
 impl Rand for Instruction {
     fn rand<R: Rng>(rng: &mut R) -> Self {
@@ -162,6 +174,10 @@ impl Rand for Instruction {
             1 => Load(rng.gen::<Data>(), rng.gen::<Register>()),
             2 => Add(rng.gen::<Data>(), rng.gen::<Register>()),
             3 => Sub(rng.gen::<Data>(), rng.gen::<Register>()),
+            4 => JumpZero(rng.gen::<Data>(), rng.gen::<Register>()),
+            5 => JumpNotZero(rng.gen::<Data>(), rng.gen::<Register>()),
+            6 => JumpRZero(rng.gen::<Register>(), rng.gen::<Register>()),
+            7 => JumpRNotZero(rng.gen::<Register>(), rng.gen::<Register>()),
             _ => NOP,
         }
     }

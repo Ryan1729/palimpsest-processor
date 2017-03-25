@@ -281,6 +281,36 @@ fn execute(game: &mut Game, address: i32) -> i32 {
 
             set_register(game, new_value, register);
         }
+        JumpZero(data, register) => {
+            let reg_value = get_register_value(game, register);
+
+            if reg_value == 0 {
+                return get_value(data) as i32;
+            }
+        }
+        JumpNotZero(data, register) => {
+            let reg_value = get_register_value(game, register);
+
+            if reg_value != 0 {
+                return get_value(data) as i32;
+            }
+        }
+        JumpRZero(register1, register2) => {
+            let reg_value = get_register_value(game, register2);
+
+            if reg_value == 0 {
+                return get_register_value(game, register1) as i32;
+            }
+
+        }
+        JumpRNotZero(register1, register2) => {
+            let reg_value = get_register_value(game, register2);
+
+            if reg_value != 0 {
+                return get_register_value(game, register1) as i32;
+            }
+
+        }
         NOP => {}
     }
 
