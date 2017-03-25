@@ -205,7 +205,7 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         y: 8,
         w: game.run_button_spec.w,
         h: 3,
-        text: "Test".to_string(),
+        text: "Break".to_string(),
     };
 
     if do_button(platform,
@@ -214,10 +214,8 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
                  -804788405,
                  left_mouse_pressed,
                  left_mouse_released) {
-        unsafe {
-            println!("a: {}", a);
-            a += 1;
-        }
+        game.executing_address = None;
+        game.instruction_countdown = COUNTDOWN_LENGTH;
     }
 
     (platform.print_xy)(32, 14, &format!("{:?}", game.executing_address));
