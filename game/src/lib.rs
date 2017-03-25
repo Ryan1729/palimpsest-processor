@@ -244,9 +244,6 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
         game.paused = false;
     }
 
-
-    (platform.print_xy)(32, 14, &format!("{:?}", game.executing_address));
-
     draw(platform, game);
 
     false
@@ -351,8 +348,6 @@ fn is_on_playfield(new_address: i32) -> bool {
 
 const CARD_UI_ID: UiId = 1;
 
-static mut a: i32 = 0;
-
 //calling this once will swallow multiple clicks on the button. We could either
 //pass in and return the number of clicks to fix that, or this could simply be
 //called multiple times per frame (once for each click).
@@ -430,15 +425,6 @@ pub fn over_address(game: &Game, mouse_pos: Point) -> Option<usize> {
 }
 
 pub fn draw(platform: &Platform, game: &Game) {
-
-    (platform.print_xy)(32,
-                        16,
-                        &format!("hot : {}, active : {}",
-                                 game.ui_context.hot,
-                                 game.ui_context.active));
-
-    (platform.print_xy)(32, 0, "load state A\nand A 0b0001\nJZ SLOT1");
-
     draw_instructions(platform, game);
 
     let selected = game.selected_card.unwrap_or(std::usize::MAX);

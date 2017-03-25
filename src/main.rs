@@ -11,9 +11,6 @@ use bear_lib_terminal::geometry::{Point, Rect, Size};
 use std::mem;
 
 use common::*;
-use common::Register::*;
-use common::Data::*;
-use common::Instruction::*;
 
 const LIB_PATH: &'static str = "./target/debug/libgame.so";
 
