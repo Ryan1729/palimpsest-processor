@@ -562,10 +562,12 @@ const REGISTER_DISPLAY_HEIGHT: i32 = 1;
 const REGISTERS_X_OFFSET: i32 = REGISTER_DISPLAY_WIDTH * REGISTERS_PER_ROW;
 const REGISTERS_Y_OFFSET: i32 = 0;
 
+const GENERAL_REGISTER_DISPLAY_HEIGHT: i32 = ((REGISTER_AMOUNT as i32) / REGISTERS_PER_ROW);
+
 fn draw_registers(platform: &Platform, game: &Game) {
     let width = (platform.size)().width - REGISTERS_X_OFFSET;
 
-    for y in 0..((REGISTER_AMOUNT as i32) / REGISTERS_PER_ROW) {
+    for y in 0..GENERAL_REGISTER_DISPLAY_HEIGHT {
         for x in 0..REGISTERS_PER_ROW {
             let register_number = y * REGISTERS_PER_ROW + x;
 
@@ -581,6 +583,16 @@ fn draw_registers(platform: &Platform, game: &Game) {
             }
         }
     }
+
+    let ir_string = if let Some(address) = game.executing_address {
+        format!("IR:{:#04X}", address)
+    } else {
+        "IR:----".to_string()
+    };
+
+    (platform.print_xy)(width,
+                        GENERAL_REGISTER_DISPLAY_HEIGHT + REGISTERS_Y_OFFSET,
+                        &ir_string);
 }
 
 fn draw_instructions(platform: &Platform, game: &Game) {

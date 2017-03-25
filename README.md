@@ -12,9 +12,6 @@ Then the executable should run correctly
 
 ##TODO List
 -> more instructions
-  -> display Instruction Register
-    -> let's make it a separate thing for now, we can make it a normal
-       register later if we want.
   -> jumps
     -> Jump to immediate if Register is 0
       -> naming: JAZ -> Jump if A is Zero?
