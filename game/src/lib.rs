@@ -197,17 +197,34 @@ pub fn update_and_render(platform: &Platform, game: &mut Game, events: &mut Vec<
     false
 }
 
+fn get_value(data: Data) -> u8 {
+    match data {
+        Immeadiate(v) => v,
+    }
+}
 
 fn execute(game: &mut Game, address: i32) -> i32 {
     let instruction = get_instruction(game, address);
 
     match instruction {
         Load(data, register) => {
-            let value = match data {
-                Immeadiate(v) => v,
-            };
+            let value = get_value(data);
 
             set_register(game, value, register);
+        }
+        Add(data, register) => {
+            let value = get_value(data);
+
+            let new_value = value.wrapping_add(get_register_value(game, register));
+
+            set_register(game, new_value, register);
+        }
+        Sub(data, register) => {
+            let value = get_value(data);
+
+            let new_value = value.wrapping_sub(get_register_value(game, register));
+
+            set_register(game, new_value, register);
         }
         NOP => {}
     }
@@ -217,6 +234,9 @@ fn execute(game: &mut Game, address: i32) -> i32 {
 
 fn set_register(game: &mut Game, value: u8, register: Register) {
     game.registers[register as usize] = value;
+}
+fn get_register_value(game: &mut Game, register: Register) -> u8 {
+    game.registers[register as usize]
 }
 
 fn set_executing_address(game: &mut Game, new_address: i32) {
@@ -492,7 +512,7 @@ fn draw_registers(platform: &Platform, game: &Game) {
 
     for y in 0..((REGISTER_AMOUNT as i32) / REGISTERS_PER_ROW) {
         for x in 0..REGISTERS_PER_ROW {
-            let register_number = (y * REGISTERS_PER_ROW + x);
+            let register_number = y * REGISTERS_PER_ROW + x;
 
             if let Some(register) = common::to_register(register_number) {
 

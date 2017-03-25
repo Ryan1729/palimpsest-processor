@@ -111,6 +111,8 @@ impl Card {
 pub enum Instruction {
     NOP,
     Load(Data, Register),
+    Add(Data, Register),
+    Sub(Data, Register),
 }
 use Instruction::*;
 
@@ -119,6 +121,8 @@ impl fmt::Display for Instruction {
         match *self {
             Instruction::NOP => write!(f, "{}", "NOP"),
             Instruction::Load(data, register) => write!(f, "load {} {}", data, register),
+            Instruction::Add(data, register) => write!(f, "add  {} {}", data, register),
+            Instruction::Sub(data, register) => write!(f, "sub  {} {}", data, register),
         }
     }
 }

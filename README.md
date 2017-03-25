@@ -11,9 +11,7 @@ then you should run `sudo ldconfig` to complete the installation.
 Then the executable should run correctly
 
 ##TODO List
--> more instructions
-  -> add immediate
-  -> sub immediate
+-> re-fill hand with generated cards that use whole range of instructions
 -> break execution button
 -> pause execution button
 -> more instructions
